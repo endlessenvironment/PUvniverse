@@ -1,4 +1,4 @@
-import { signIn, startVideoBroadcast, stopVideoBroadcast, startAudioBroadcast, stopAudioBroadcast, listenToStreams, getStreamsCount } from './firebase.js';
+import { signIn } from './firebase.js';
 
 function updateClock() {
   const clock = document.getElementById('clock');
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   const sendBtn = document.getElementById('sendBtn');
   const broadcastBtn = document.getElementById('broadcastBtn');
   const talkBtn = document.getElementById('talkBtn');
-  const webcams = document.querySelectorAll('.webcam');
 
   const observer = new MutationObserver(() => {
     if (chatMessages.scrollHeight > chatMessages.clientHeight) {
@@ -31,6 +30,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
   observer.observe(chatMessages, { childList: true });
+
+  const displayedMessageIds = new Set();
 
   document.body.classList.add('loading');
   const overlay = document.getElementById('overlay');
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
+
 
   startButton.addEventListener('click', () => {
     const isMenuVisible = menuContent.style.display === 'block';
@@ -63,27 +65,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   sendBtn.addEventListener('click', () => {
-    // Implement message sending functionality
+
   });
 
-  talkBtn.addEventListener('mousedown', () => {
-    console.log('Starting audio broadcast');
-    startAudioBroadcast(); // Start broadcasting audio only
-  });
+  talkBtn.addEventListener('click', () => {
 
-  talkBtn.addEventListener('mouseup', () => {
-    console.log('Stopping audio broadcast');
-    stopAudioBroadcast(); // Stop broadcasting audio
-  });
-
-  broadcastBtn.addEventListener('click', async () => {
-    const streamsCount = await getStreamsCount();
-    if (streamsCount < 6) {
-      console.log('Starting video broadcast');
-      startVideoBroadcast(); // Start broadcasting video
-    } else {
-      alert("Cannot broadcast, maximum number of streams reached.");
-    }
   });
 
   chatInput.addEventListener('keypress', (e) => {
@@ -92,7 +78,4 @@ document.addEventListener('DOMContentLoaded', async function() {
       sendBtn.click();
     }
   });
-
-  console.log('Listening to streams');
-  listenToStreams(webcams);
 });
