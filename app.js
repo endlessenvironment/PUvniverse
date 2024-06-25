@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('overlay');
   overlay.classList.remove('hidden');
 
-  await signIn();
+  const userId = await signIn();  // Ensure userId is set after sign-in
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
@@ -85,31 +85,47 @@ document.addEventListener('DOMContentLoaded', async function() {
       alert('Maximum number of streams reached.');
       return;
     }
-    startBroadcast();
+    startBroadcast(userId);
   });
 
-async function startBroadcast() {
+  async function startBroadcast(userId) {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    await addStream(stream);
+    await addStream(stream, userId);
     // No need to play the stream locally, it will be retrieved and played from the database
   }
 
-  function playStreamFromData(streamData, videoElement) {
-    const stream = new MediaStream();
-    streamData.tracks.forEach(trackData => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(localStream => {
-        const track = localStream.getTracks().find(t => t.kind === trackData.kind);
-        if (track) {
-          stream.addTrack(track);
-        }
-        videoElement.srcObject = stream;
-      });
+  async function playStreamFromData(streamData, videoElement) {
+    const pc = new RTCPeerConnection();
+
+    pc.ontrack = (event) => {
+      const [remoteStream] = event.streams;
+      videoElement.srcObject = remoteStream;
+    };
+
+    const remoteStream = new MediaStream();
+    streamData.tracks.forEach(async (trackData) => {
+      const track = await getRemoteTrack(trackData);
+      if (track) {
+        remoteStream.addTrack(track);
+      }
     });
+
+    pc.addStream(remoteStream);
+  }
+
+  async function getRemoteTrack(trackData) {
+    // Simulating retrieval of a remote track
+    const constraints = {
+      video: trackData.kind === 'video',
+      audio: trackData.kind === 'audio'
+    };
+    const localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    return localStream.getTracks().find(track => track.kind === trackData.kind);
   }
 
   listenForStreamUpdates((streams) => {
     streams.forEach((streamData, index) => {
-      if (index < webcams.length) {
+      if (index < webcams.length && streamData.userId !== userId) {
         playStreamFromData(streamData, webcams[index]);
       }
     });
@@ -118,7 +134,7 @@ async function startBroadcast() {
   // Initial load of streams
   const initialStreams = await getStreams();
   initialStreams.forEach((streamData, index) => {
-    if (index < webcams.length) {
+    if (index < webcams.length && streamData.userId !== userId) {
       playStreamFromData(streamData, webcams[index]);
     }
   });

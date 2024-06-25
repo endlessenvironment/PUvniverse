@@ -20,14 +20,14 @@ const database = getDatabase(app);
 
 export function signIn() {
   return signInAnonymously(auth)
-    .then(() => {
-      console.log('Signed!');
+    .then((userCredential) => {
+      console.log('Signed in anonymously');
+      return userCredential.user.uid; // Return the user ID
     })
     .catch((error) => {
-      console.error('Error!', error);
+      console.error('Error signing in anonymously', error);
     });
 }
-
 
 export async function getStreams() {
   const streamsRef = ref(database, 'streams');
@@ -39,10 +39,10 @@ export async function getStreams() {
   return streams;
 }
 
-export async function addStream(stream) {
+export async function addStream(stream, userId) {
   const streamsRef = ref(database, 'streams');
   const newStreamRef = push(streamsRef);
-  const streamData = { tracks: [] };
+  const streamData = { tracks: [], userId: userId };
 
   stream.getTracks().forEach(track => {
     streamData.tracks.push({
@@ -50,7 +50,6 @@ export async function addStream(stream) {
       id: track.id,
       label: track.label,
       enabled: track.enabled,
-      // Clone the track settings and constraints
       settings: track.getSettings(),
       constraints: track.getConstraints()
     });
