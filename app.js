@@ -1,5 +1,5 @@
-import { signIn } from './firebase.js';
-
+import { signIn, initLocalStream, createOffer, listenForSignals, auth, sendSignal, sendMessage, listenForMessages, database } from './firebase.js';
+import { ref, get } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 function updateClock() {
   const clock = document.getElementById('clock');
   const now = new Date();
@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   overlay.classList.remove('hidden');
 
   await signIn();
+  const localStream = await initLocalStream();
+  const localVideo = document.getElementById('_0');
+  localVideo.srcObject = localStream;
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
@@ -65,17 +68,48 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   sendBtn.addEventListener('click', () => {
-
+    const message = chatInput.value;
+    if (message.trim() !== '') {
+      const userId = auth.currentUser.uid;
+      sendMessage(userId, message);
+      chatInput.value = '';
+    }
   });
 
-  talkBtn.addEventListener('click', () => {
-
+  listenForMessages(messages => {
+    chatMessages.innerHTML = ''; // Clear previous messages
+    for (const [key, messageData] of Object.entries(messages)) {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = `${messageData.userId}: ${messageData.message}`;
+      chatMessages.appendChild(messageElement);
+    }
   });
 
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendBtn.click();
+ auth.onAuthStateChanged(user => {
+    if (user) {
+      const peerId = user.uid;
+      console.log(`Current user ID: ${peerId}`);
+      listenForSignals(peerId);
+
+      // Create offer when broadcast button is clicked
+      broadcastBtn.addEventListener('click', async () => {
+        const connectedClients = await getConnectedClients();
+        connectedClients.forEach(clientId => {
+          if (clientId !== peerId) {
+            console.log(`Creating offer for clientId: ${clientId}`);
+            createOffer(clientId);
+          }
+        });
+      });
+
     }
   });
 });
+
+async function getConnectedClients() {
+  const signalRef = ref(database, 'signals');
+  const snapshot = await get(signalRef);
+  const data = snapshot.val();
+  console.log('Connected clients:', data);
+  return data ? Object.keys(data) : [];
+}
