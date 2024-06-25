@@ -1,28 +1,30 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-auth.js";
-import { getDatabase, ref, push, set, onValue, get } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, onValue, set, get, onDisconnect } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB35b_fBDqQ9QXKPHhgFByk_VKW39todRg",
-  authDomain: "endlesspuvniverse.firebaseapp.com",
-  databaseURL: "https://endlesspuvniverse-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "endlesspuvniverse",
-  storageBucket: "endlesspuvniverse.appspot.com",
-  messagingSenderId: "489205825944",
-  appId: "1:489205825944:web:411bd957f3bdb308ab2bed",
-  measurementId: "G-B5JP295M8C"
+  apiKey: "AIzaSyCR7f4cihuwGw37oM69v0MAtgRydkmm5b4",
+  authDomain: "endlesspuvni.firebaseapp.com",
+  databaseURL: "https://endlesspuvni-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "endlesspuvni",
+  storageBucket: "endlesspuvni.appspot.com",
+  messagingSenderId: "892171551323",
+  appId: "1:892171551323:web:9e596a5c80e84df239757e",
+  measurementId: "G-6LBL4FJSM9"
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const database = getDatabase(app);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 export function signIn() {
   return signInAnonymously(auth)
     .then(() => {
-      console.log('Signed!');
+      console.log('Signed in anonymously');
     })
     .catch((error) => {
-      console.error('Error!', error);
+      console.error('Error signing in:', error);
     });
 }
+
+export { auth, db, onDisconnect, ref, push, onChildAdded, onValue, set, get };
