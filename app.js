@@ -3,8 +3,12 @@ import { auth, db, signIn, onDisconnect, ref, push, onChildAdded, onValue, set, 
 let peerConnections = {};
 let localStream;
 let isBroadcasting = false;
-const configuration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]};
-
+const configuration = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ]
+};
 function updateClock() {
   const clock = document.getElementById('clock');
   const now = new Date();
@@ -85,11 +89,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 });
-
+window.addEventListener('error', function(event) {
+  console.error('Uncaught error:', event.error);
+});
 async function setupVideoChat() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({ 
+      video: true, 
+      audio: true 
+    });
     document.getElementById('_0').srcObject = localStream;
+    console.log('Local stream obtained:', localStream);
   } catch (error) {
     console.error('Error accessing media devices:', error);
   }
@@ -119,6 +129,9 @@ async function toggleBroadcast(currentUserId) {
     peerConnections = {};
     isBroadcasting = false;
     broadcastBtn.textContent = 'Broadcast';
+    document.querySelectorAll('.webcam:not(#_0)').forEach(video => {
+      video.srcObject = null;
+    });
   } else {
     console.log('Starting broadcast...');
     const usersRef = ref(db, 'users');
@@ -134,7 +147,7 @@ async function toggleBroadcast(currentUserId) {
 
           const offer = await peerConnection.createOffer();
           await peerConnection.setLocalDescription(offer);
-          console.log(`Sending offer to user ${userId}`);
+          console.log(`Sending offer to user ${userId}`, offer);
           sendMessage(userId, { 
             type: 'offer',
             sdp: peerConnection.localDescription,
@@ -154,13 +167,9 @@ function createPeerConnection(userId) {
   console.log(`Creating peer connection for user ${userId}`);
   const peerConnection = new RTCPeerConnection(configuration);
   
-  localStream.getTracks().forEach(track => {
-    peerConnection.addTrack(track, localStream);
-  });
-
   peerConnection.onicecandidate = event => {
+    console.log(`ICE candidate for ${userId}:`, event.candidate);
     if (event.candidate) {
-      console.log(`Sending ICE candidate to user ${userId}`);
       sendMessage(userId, { 
         type: 'ice-candidate',
         candidate: event.candidate,
@@ -169,11 +178,22 @@ function createPeerConnection(userId) {
     }
   };
 
+  peerConnection.oniceconnectionstatechange = () => {
+    console.log(`ICE connection state for ${userId}: ${peerConnection.iceConnectionState}`);
+  };
+
+  peerConnection.onsignalingstatechange = () => {
+    console.log(`Signaling state for ${userId}: ${peerConnection.signalingState}`);
+  };
+
   peerConnection.ontrack = event => {
-    console.log(`Received track from user ${userId}`);
-    const videoElement = document.querySelector(`.webcam:not([srcObject])`);
+    console.log(`Received track from ${userId}:`, event.streams[0]);
+    const videoElement = document.querySelector(`.webcam:not([srcObject]):not(#_0)`);
     if (videoElement) {
       videoElement.srcObject = event.streams[0];
+      console.log(`Set video stream for ${userId} to element:`, videoElement);
+    } else {
+      console.warn(`No available video element for stream from ${userId}`);
     }
   };
 
@@ -187,34 +207,49 @@ function sendMessage(userId, message) {
 
 async function handleIncomingMessage(snapshot) {
   const message = snapshot.val();
+  console.log('Received message:', message);
+
   const currentUserId = auth.currentUser.uid;
+
+  console.log('Received message:', message);
 
   if (message.type === 'chat') {
     displayChatMessage(message);
   } else if (message.type === 'offer' && message.from !== currentUserId) {
-    console.log(`Received offer from user ${message.from}`);
-    const peerConnection = createPeerConnection(message.from);
-    peerConnections[message.from] = peerConnection;
+    console.log(`Received offer from user ${message.from}`, message.sdp);
+    let peerConnection = peerConnections[message.from];
+    if (!peerConnection) {
+      peerConnection = createPeerConnection(message.from);
+      peerConnections[message.from] = peerConnection;
+    }
     await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-    console.log(`Sending answer to user ${message.from}`);
+    console.log(`Sending answer to user ${message.from}`, answer);
     sendMessage(message.from, { 
       type: 'answer',
       sdp: peerConnection.localDescription,
       from: currentUserId
     });
   } else if (message.type === 'answer' && message.from !== currentUserId) {
-    console.log(`Received answer from user ${message.from}`);
+    console.log(`Received answer from user ${message.from}`, message.sdp);
     const peerConnection = peerConnections[message.from];
     if (peerConnection) {
       await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
+    } else {
+      console.warn(`No peer connection found for user ${message.from}`);
     }
   } else if (message.type === 'ice-candidate' && message.from !== currentUserId) {
-    console.log(`Received ICE candidate from user ${message.from}`);
+    console.log(`Received ICE candidate from user ${message.from}`, message.candidate);
     const peerConnection = peerConnections[message.from];
     if (peerConnection) {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+      } catch (error) {
+        console.error('Error adding received ice candidate', error);
+      }
+    } else {
+      console.warn(`No peer connection found for user ${message.from}`);
     }
   }
 }
