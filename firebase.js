@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-auth.js";
-import { getDatabase, ref, push, onChildAdded, onValue, set, get, onDisconnect } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCR7f4cihuwGw37oM69v0MAtgRydkmm5b4",
@@ -14,17 +13,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+const auth = getAuth();
 
 export function signIn() {
   return signInAnonymously(auth)
     .then(() => {
-      console.log('Signed in anonymously');
+      console.log('Signed!');
     })
     .catch((error) => {
-      console.error('Error signing in:', error);
+      console.error('Error!', error);
     });
 }
-
-export { auth, db, onDisconnect, ref, push, onChildAdded, onValue, set, get };
