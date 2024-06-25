@@ -42,16 +42,19 @@ export async function getStreams() {
 export async function addStream(stream) {
   const streamsRef = ref(database, 'streams');
   const newStreamRef = push(streamsRef);
+  const streamData = { tracks: [] };
 
-  const pc = new RTCPeerConnection();
-  stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-
-  const streamData = {
-    offer: offer
-  };
+  stream.getTracks().forEach(track => {
+    streamData.tracks.push({
+      kind: track.kind,
+      id: track.id,
+      label: track.label,
+      enabled: track.enabled,
+      // Clone the track settings and constraints
+      settings: track.getSettings(),
+      constraints: track.getConstraints()
+    });
+  });
 
   await set(newStreamRef, streamData);
   return newStreamRef.key;

@@ -88,23 +88,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     startBroadcast();
   });
 
-
-  async function startBroadcast() {
+async function startBroadcast() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     await addStream(stream);
     // No need to play the stream locally, it will be retrieved and played from the database
   }
 
   function playStreamFromData(streamData, videoElement) {
-    const pc = new RTCPeerConnection();
-    pc.ontrack = (event) => {
-      const stream = event.streams[0];
-      videoElement.srcObject = stream;
-    };
-
-    // Simulate signaling by setting remote description and creating an offer
-    pc.setRemoteDescription(new RTCSessionDescription(streamData.offer));
-    pc.createAnswer().then(answer => pc.setLocalDescription(answer));
+    const stream = new MediaStream();
+    streamData.tracks.forEach(trackData => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(localStream => {
+        const track = localStream.getTracks().find(t => t.kind === trackData.kind);
+        if (track) {
+          stream.addTrack(track);
+        }
+        videoElement.srcObject = stream;
+      });
+    });
   }
 
   listenForStreamUpdates((streams) => {
