@@ -59,6 +59,21 @@ export async function addStream(stream, userId) {
   return newStreamRef.key;
 }
 
+export async function addOffer(userId, offer) {
+  const offersRef = ref(database, `offers/${userId}`);
+  await set(offersRef, { userId, offer });
+}
+
+export async function addAnswer(userId, answer) {
+  const answersRef = ref(database, `answers/${userId}`);
+  await set(answersRef, { userId, answer });
+}
+
+export async function addIceCandidate(userId, candidate) {
+  const candidatesRef = ref(database, `candidates/${userId}`);
+  await push(candidatesRef, { userId, candidate });
+}
+
 export function listenForStreamUpdates(callback) {
   const streamsRef = ref(database, 'streams');
   onValue(streamsRef, (snapshot) => {
@@ -67,5 +82,32 @@ export function listenForStreamUpdates(callback) {
       streams.push(childSnapshot.val());
     });
     callback(streams);
+  });
+}
+
+export function listenForOffers(callback) {
+  const offersRef = ref(database, 'offers');
+  onValue(offersRef, (snapshot) => {
+    snapshot.forEach(childSnapshot => {
+      callback(childSnapshot.val());
+    });
+  });
+}
+
+export function listenForAnswers(callback) {
+  const answersRef = ref(database, 'answers');
+  onValue(answersRef, (snapshot) => {
+    snapshot.forEach(childSnapshot => {
+      callback(childSnapshot.val());
+    });
+  });
+}
+
+export function listenForIceCandidates(callback) {
+  const candidatesRef = ref(database, 'candidates');
+  onValue(candidatesRef, (snapshot) => {
+    snapshot.forEach(childSnapshot => {
+      callback(childSnapshot.val());
+    });
   });
 }

@@ -1,4 +1,4 @@
-import { signIn, getStreams, addStream, listenForStreamUpdates } from './firebase.js';
+import { signIn, getStreams, addStream, listenForStreamUpdates, addOffer, listenForOffers, addAnswer, listenForAnswers, addIceCandidate, listenForIceCandidates } from './firebase.js';
 
 function updateClock() {
   const clock = document.getElementById('clock');
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const broadcastBtn = document.getElementById('broadcastBtn');
   const talkBtn = document.getElementById('talkBtn');
   const webcams = document.querySelectorAll('.webcam'); // Ensure this is in the correct scope
+  const peerConnections = {};
 
   const observer = new MutationObserver(() => {
     if (chatMessages.scrollHeight > chatMessages.clientHeight) {
@@ -32,17 +33,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   observer.observe(chatMessages, { childList: true });
 
-  const displayedMessageIds = new Set();
-
   document.body.classList.add('loading');
   const overlay = document.getElementById('overlay');
   overlay.classList.remove('hidden');
 
-  const userId = await signIn();  // Ensure userId is set after sign-in
+  const userId = await signIn();
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
-
 
   startButton.addEventListener('click', () => {
     const isMenuVisible = menuContent.style.display === 'block';
@@ -66,11 +64,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   sendBtn.addEventListener('click', () => {
-
+    // Handle send message functionality
   });
 
   talkBtn.addEventListener('click', () => {
-
+    // Handle talk functionality
   });
 
   chatInput.addEventListener('keypress', (e) => {
@@ -79,63 +77,109 @@ document.addEventListener('DOMContentLoaded', async function() {
       sendBtn.click();
     }
   });
+
   broadcastBtn.addEventListener('click', async () => {
     const streams = await getStreams();
     if (streams.length >= 6) {
       alert('Maximum number of streams reached.');
       return;
     }
-    startBroadcast(userId);
+    await startBroadcast(userId);
   });
 
   async function startBroadcast(userId) {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     await addStream(stream, userId);
-    // No need to play the stream locally, it will be retrieved and played from the database
+    const pc = createPeerConnection(userId, stream);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await addOffer(userId, offer);
   }
 
-  async function playStreamFromData(streamData, videoElement) {
+  function createPeerConnection(userId, localStream) {
     const pc = new RTCPeerConnection();
+    peerConnections[userId] = pc;
+
+    localStream.getTracks().forEach(track => {
+      pc.addTrack(track, localStream);
+    });
 
     pc.ontrack = (event) => {
       const [remoteStream] = event.streams;
-      videoElement.srcObject = remoteStream;
-    };
-
-    const remoteStream = new MediaStream();
-    streamData.tracks.forEach(async (trackData) => {
-      const track = await getRemoteTrack(trackData);
-      if (track) {
-        remoteStream.addTrack(track);
+      const videoElement = document.querySelector(`.webcam[data-user-id="${userId}"]`);
+      if (videoElement) {
+        videoElement.srcObject = remoteStream;
       }
-    });
-
-    pc.addStream(remoteStream);
-  }
-
-  async function getRemoteTrack(trackData) {
-    // Simulating retrieval of a remote track
-    const constraints = {
-      video: trackData.kind === 'video',
-      audio: trackData.kind === 'audio'
     };
-    const localStream = await navigator.mediaDevices.getUserMedia(constraints);
-    return localStream.getTracks().find(track => track.kind === trackData.kind);
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        addIceCandidate(userId, event.candidate);
+      }
+    };
+
+    return pc;
   }
 
   listenForStreamUpdates((streams) => {
     streams.forEach((streamData, index) => {
       if (index < webcams.length && streamData.userId !== userId) {
-        playStreamFromData(streamData, webcams[index]);
+        const videoElement = webcams[index];
+        videoElement.setAttribute('data-user-id', streamData.userId);
+        playStreamFromData(streamData, videoElement);
       }
     });
   });
+
+  function playStreamFromData(streamData, videoElement) {
+    const userId = streamData.userId;
+    let pc = peerConnections[userId];
+
+    if (!pc) {
+      pc = new RTCPeerConnection();
+      peerConnections[userId] = pc;
+
+      pc.ontrack = (event) => {
+        const [remoteStream] = event.streams;
+        videoElement.srcObject = remoteStream;
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          addIceCandidate(userId, event.candidate);
+        }
+      };
+    }
+
+    listenForOffers(async (offerData) => {
+      if (offerData.userId === userId && pc.signalingState === 'stable') {
+        await pc.setRemoteDescription(new RTCSessionDescription(offerData.offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await addAnswer(userId, answer);
+      }
+    });
+
+    listenForAnswers(async (answerData) => {
+      if (answerData.userId === userId && pc.signalingState === 'have-local-offer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(answerData.answer));
+      }
+    });
+
+    listenForIceCandidates(async (candidateData) => {
+      if (candidateData.userId === userId) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidateData.candidate));
+      }
+    });
+  }
 
   // Initial load of streams
   const initialStreams = await getStreams();
   initialStreams.forEach((streamData, index) => {
     if (index < webcams.length && streamData.userId !== userId) {
-      playStreamFromData(streamData, webcams[index]);
+      const videoElement = webcams[index];
+      videoElement.setAttribute('data-user-id', streamData.userId);
+      playStreamFromData(streamData, videoElement);
     }
   });
 });
