@@ -1,4 +1,4 @@
-import { signIn, sendMessage, onMessageAdded, setStream, onStreamAdded, onStreamRemoved, deleteStream } from './firebase.js';
+import { signIn } from './firebase.js';
 
 function updateClock() {
   const clock = document.getElementById('clock');
@@ -27,12 +27,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const ListWindow = document.getElementById('ListWindow');
   const hideListBtn = document.getElementById('hideListBtn');
 
-  let localStream;
   let userId;
-  let isBroadcasting = false;
-  let isMicMuted = false;
-  let activeStreams = 0;
-  let streamId;
 
   const observer = new MutationObserver(() => {
     if (chatMessages.scrollHeight > chatMessages.clientHeight) {
@@ -82,110 +77,5 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   hideListBtn.addEventListener('click', () => {
     ListWindow.classList.add('hidden');
-  });
-
-  voiceBtn.addEventListener('click', toggleMic);
-  broadcastBtn.addEventListener('click', toggleBroadcast);
-
-  sendBtn.addEventListener('click', () => {
-    const message = chatInput.value.trim();
-    if (message !== '') {
-      const nickname = nicknameInput.value || userId;
-      sendMessage({ sender: nickname, content: message });
-      chatInput.value = '';
-    }
-  });
-
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendBtn.click();
-    }
-  });
-
-  function stopBroadcast() {
-    if (isBroadcasting) {
-      localStream.getTracks().forEach(track => track.stop());
-      deleteStream(streamId);
-      isBroadcasting = false;
-      activeStreams--;
-
-      // Reset the used webcam control
-      const videoElement = document.querySelector(`.webcam[data-stream-id="${streamId}"]`);
-      if (videoElement) {
-        videoElement.srcObject = null;
-        videoElement.dataset.streamId = '';
-      }
-
-      // Reset the local stream
-      localStream = null;
-      streamId = null;
-    }
-  }
-
-  function toggleMic() {
-    if (localStream) {
-      localStream.getAudioTracks()[0].enabled = !isMicMuted;
-      isMicMuted = !isMicMuted;
-    }
-  }
-
-function toggleBroadcast() {
-  if (isBroadcasting) {
-    stopBroadcast();
-  } else {
-    if (activeStreams < 6) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          localStream = stream;
-          streamId = generateStreamId();
-          setStream(streamId, localStream);
-          isBroadcasting = true;
-          activeStreams++;
-        });
-    } else {
-      alert('Broadcasting limit reached. Please try again later.');
-    }
-  }
-}
-
-  function generateStreamId() {
-    return Math.random().toString(36).substring(7);
-  }
-
-  onMessageAdded((message) => {
-    const messageElement = document.createElement('div');
-    messageElement.textContent = `${message.sender}: ${message.content}`;
-    chatMessages.appendChild(messageElement);
-  });
-
-  onStreamAdded((streamId, stream) => {
-    const videoElements = document.querySelectorAll('.webcam');
-    for (let i = 0; i < videoElements.length; i++) {
-      if (videoElements[i].srcObject === null) {
-        if (stream) {
-          videoElements[i].srcObject = stream;
-          videoElements[i].dataset.streamId = streamId;
-          activeStreams++;
-        } else {
-          videoElements[i].srcObject = null;
-          videoElements[i].dataset.streamId = '';
-        }
-        break;
-      }
-    }
-  });
-
-  onStreamRemoved((streamId) => {
-    const videoElement = document.querySelector(`.webcam[data-stream-id="${streamId}"]`);
-    if (videoElement) {
-      videoElement.srcObject = null;
-      videoElement.dataset.streamId = '';
-      activeStreams--;
-    }
-  });
-
-  window.addEventListener('beforeunload', (event) => {
-    stopBroadcast();
   });
 });
