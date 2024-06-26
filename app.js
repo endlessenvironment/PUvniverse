@@ -61,14 +61,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   openChatBtn.addEventListener('click', (event) => {
     menuContent.style.display = 'none';
-	ListWindow.classList.add('hidden');
-	chatWindow.classList.remove('hidden');
+    showWindow(chatWindow, ListWindow);
   });
 
   openListBtn.addEventListener('click', (event) => {
     menuContent.style.display = 'none';
-	ListWindow.classList.remove('hidden');
-	chatWindow.classList.add('hidden');
+    showWindow(ListWindow, chatWindow);
   });
 
   hideChatBtn.addEventListener('click', () => {
@@ -78,4 +76,25 @@ document.addEventListener('DOMContentLoaded', async function() {
   hideListBtn.addEventListener('click', () => {
     ListWindow.classList.add('hidden');
   });
+  
+  function checkWindowFit() {
+    const desktopRect = desktop.getBoundingClientRect();
+    const chatRect = chatWindow.getBoundingClientRect();
+    const ListRect = ListWindow.getBoundingClientRect();
+    if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
+      chatWindow.classList.add('hidden');
+	  alert("Chat does not fit in the desktop and has been minimized");
+    }
+    if (ListRect.right > desktopRect.right || ListRect.bottom > desktopRect.bottom) {
+      ListWindow.classList.add('hidden');
+	  alert("List does not fit in the desktop and has been minimized");
+    }
+  }
+  function showWindow(windowToShow, windowToHide) {
+    windowToShow.classList.remove('hidden');
+    windowToHide.classList.add('hidden');
+    checkWindowFit();
+  }  
+  window.addEventListener('resize', checkWindowFit);
+  checkWindowFit();  
 });
