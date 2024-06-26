@@ -14,7 +14,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const database = getDatabase();
 
 export function signIn() {
   return signInAnonymously(auth)
