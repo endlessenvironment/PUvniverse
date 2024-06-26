@@ -13,18 +13,19 @@ setInterval(updateClock, 1000);
 updateClock();
 
 document.addEventListener('DOMContentLoaded', async function() {
+  const desktop = document.querySelector('.desktop');	
   const startButton = document.querySelector('.start-button');
   const menuContent = document.querySelector('.menu-content');
   const openChatBtn = document.getElementById('openChatBtn');
+  const openListBtn = document.getElementById('openListBtn');
   const chatWindow = document.getElementById('chatWindow');
+  const ListWindow = document.getElementById('ListWindow');
   const hideChatBtn = document.getElementById('hideChatBtn');
   const chatMessages = document.getElementById('chatMessages');
   const chatInput = document.getElementById('chatInput');
   const sendBtn = document.getElementById('sendBtn');
   const broadcastBtn = document.getElementById('broadcastBtn');
   const voiceBtn = document.getElementById('voiceBtn');
-  const openListBtn = document.getElementById('openListBtn');
-  const ListWindow = document.getElementById('ListWindow');
   const hideListBtn = document.getElementById('hideListBtn');
 
   let userId;
@@ -78,4 +79,22 @@ document.addEventListener('DOMContentLoaded', async function() {
   hideListBtn.addEventListener('click', () => {
     ListWindow.classList.add('hidden');
   });
+  
+  function checkBounds() {
+    const desktopRect = desktop.getBoundingClientRect();
+    const chatRect = chatWindow.getBoundingClientRect();
+    const listRect = ListWindow.getBoundingClientRect();
+
+    if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
+      chatWindow.classList.add('hidden');
+    }
+
+    if (listRect.right > desktopRect.right || listRect.bottom > desktopRect.bottom) {
+      ListWindow.classList.add('hidden');
+    }
+  }
+
+  window.addEventListener('resize', checkBounds);
+  window.addEventListener('scroll', checkBounds);
+  checkBounds();
 });
