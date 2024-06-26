@@ -352,7 +352,16 @@ body.loading {
     z-index: 1000;
     overflow: hidden;
  }
- .List-container {
+.List-nickname {
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    border: none;
+	width: 90px;
+    padding: 5px 10px;
+    margin-right: 10px; 
+} 
+.List-container {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
