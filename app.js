@@ -83,17 +83,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   function checkBounds() {
     const desktopRect = desktop.getBoundingClientRect();
     const chatRect = chatWindow.getBoundingClientRect();
-    const listRect = ListWindow.getBoundingClientRect();
-
+    const ListRect = ListWindow.getBoundingClientRect();
     if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
       chatWindow.classList.add('hidden');
     }
-
-    if (listRect.right > desktopRect.right || listRect.bottom > desktopRect.bottom) {
+    if (ListRect.right > desktopRect.right || ListRect.bottom > desktopRect.bottom) {
       ListWindow.classList.add('hidden');
     }
   }
-
   window.addEventListener('resize', checkBounds);
   window.addEventListener('scroll', checkBounds);
   checkBounds();
