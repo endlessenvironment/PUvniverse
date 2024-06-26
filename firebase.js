@@ -41,29 +41,36 @@ export function onMessageAdded(callback) {
   });
 }
 
-export function setStream(userId, stream) {
-  const streamRef = ref(database, `streams/${userId}`);
+export function setStream(streamId, stream) {
+  const streamRef = ref(database, `streams/${streamId}`);
   return set(streamRef, stream ? stream.id : null);
 }
 
 export function onStreamAdded(callback) {
   const streamsRef = ref(database, 'streams');
   onChildAdded(streamsRef, (snapshot) => {
-    const userId = snapshot.key;
-    const streamId = snapshot.val();
-    callback(userId, streamId);
+    const streamId = snapshot.key;
+    const streamValue = snapshot.val();
+    if (streamValue) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          callback(streamId, stream);
+        });
+    } else {
+      callback(streamId, null);
+    }
   });
 }
 
 export function onStreamRemoved(callback) {
   const streamsRef = ref(database, 'streams');
   onChildRemoved(streamsRef, (snapshot) => {
-    const userId = snapshot.key;
-    callback(userId);
+    const streamId = snapshot.key;
+    callback(streamId);
   });
 }
 
-export function deleteStream(userId) {
-  const streamRef = ref(database, `streams/${userId}`);
+export function deleteStream(streamId) {
+  const streamRef = ref(database, `streams/${streamId}`);
   return set(streamRef, null);
 }

@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   let isBroadcasting = false;
   let isMicMuted = false;
   let activeStreams = 0;
+  let streamId;
 
   const observer = new MutationObserver(() => {
     if (chatMessages.scrollHeight > chatMessages.clientHeight) {
@@ -102,6 +103,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 
+  function stopBroadcast() {
+    if (isBroadcasting) {
+      localStream.getTracks().forEach(track => track.stop());
+      deleteStream(streamId);
+      isBroadcasting = false;
+      activeStreams--;
+
+      // Reset the used webcam control
+      const videoElement = document.querySelector(`.webcam[data-stream-id="${streamId}"]`);
+      if (videoElement) {
+        videoElement.srcObject = null;
+        videoElement.dataset.streamId = '';
+      }
+
+      // Reset the local stream
+      localStream = null;
+      streamId = null;
+    }
+  }
+
   function toggleMic() {
     if (localStream) {
       localStream.getAudioTracks()[0].enabled = !isMicMuted;
@@ -109,77 +130,61 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
-  function toggleBroadcast() {
-    if (isBroadcasting) {
-      stopBroadcast();
+function toggleBroadcast() {
+  if (isBroadcasting) {
+    stopBroadcast();
+  } else {
+    if (activeStreams < 6) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          localStream = stream;
+          streamId = generateStreamId();
+          setStream(streamId, localStream);
+          isBroadcasting = true;
+          activeStreams++;
+        });
     } else {
-      if (activeStreams < 6) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-          .then((stream) => {
-            localStream = stream;
-            setStream(userId, localStream);
-            isBroadcasting = true;
-            activeStreams++;
-          });
-      } else {
-        alert('Broadcasting limit reached. Please try again later.');
-      }
+      alert('Broadcasting limit reached. Please try again later.');
     }
   }
-  
-  function stopBroadcast() {
-    if (isBroadcasting) {
-      localStream.getTracks().forEach(track => track.stop());
-      deleteStream(userId);
-      isBroadcasting = false;
-      activeStreams--;
-	  const videoElement = document.querySelector(`.webcam[data-user-id="${userId}"]`);
-      if (videoElement) {
-      videoElement.srcObject = null;
-      videoElement.dataset.userId = '';
-    }
-	    localStream = null;
-    }
+}
+
+  function generateStreamId() {
+    return Math.random().toString(36).substring(7);
   }
-  
+
   onMessageAdded((message) => {
     const messageElement = document.createElement('div');
     messageElement.textContent = `${message.sender}: ${message.content}`;
     chatMessages.appendChild(messageElement);
   });
 
-  onStreamAdded((userId, streamId) => {
+  onStreamAdded((streamId, stream) => {
     const videoElements = document.querySelectorAll('.webcam');
     for (let i = 0; i < videoElements.length; i++) {
       if (videoElements[i].srcObject === null) {
-        if (streamId) {
-          navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then((stream) => {
-              videoElements[i].srcObject = stream;
-              videoElements[i].dataset.userId = userId;
-              activeStreams++;
-            });
+        if (stream) {
+          videoElements[i].srcObject = stream;
+          videoElements[i].dataset.streamId = streamId;
+          activeStreams++;
         } else {
           videoElements[i].srcObject = null;
-          videoElements[i].dataset.userId = '';
+          videoElements[i].dataset.streamId = '';
         }
         break;
       }
     }
   });
 
-  onStreamRemoved((userId) => {
-    const videoElements = document.querySelectorAll('.webcam');
-    for (let i = 0; i < videoElements.length; i++) {
-      if (videoElements[i].dataset.userId === userId) {
-        videoElements[i].srcObject = null;
-        videoElements[i].dataset.userId = '';
-        activeStreams--;
-        break;
-      }
+  onStreamRemoved((streamId) => {
+    const videoElement = document.querySelector(`.webcam[data-stream-id="${streamId}"]`);
+    if (videoElement) {
+      videoElement.srcObject = null;
+      videoElement.dataset.streamId = '';
+      activeStreams--;
     }
   });
-  
+
   window.addEventListener('beforeunload', (event) => {
     stopBroadcast();
   });
