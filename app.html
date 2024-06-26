@@ -20,6 +20,7 @@
             <div class="menu-content">
                 <ul>
                     <li><a href="#" id="openChatBtn">Chat</a></li>
+                    <li><a href="#" id="openListBtn">Online</a></li>					
                 </ul>
             </div>
         </div>
@@ -28,7 +29,7 @@
     <div id="chatWindow" class="chat-window hidden">
         <div class="chat-header">
             <span>Chat</span>
-            <button id="hideChatBtn" class="hide-button">Hide</button>
+            <button id="hideChatBtn" class="hideChat-button">Hide</button>
         </div>
         <div class="webcam-container">
             <video class=webcam id="_0" autoplay controls></video>
@@ -47,6 +48,18 @@
                 <button id="voiceBtn">Talk</button>
             </div>
         </div>
+    </div>
+    <div id="ListWindow" class="List-window hidden">
+        <div class="List-header">
+            <span>Online</span>
+            <div class="List-controls">
+                <input type="text" id="ListNickname" class="List-nickname" placeholder="Nickname...">
+                <button id="hideListBtn" class="hideList-button">Hide</button>
+            </div>			
+			</div>
+        <div class="List-container">
+
+        </div>		
     </div>
     <script type="module" src="app.js"></script>
     <script src="animation.js"></script>

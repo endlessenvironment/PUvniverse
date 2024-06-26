@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   const sendBtn = document.getElementById('sendBtn');
   const broadcastBtn = document.getElementById('broadcastBtn');
   const voiceBtn = document.getElementById('voiceBtn');
+  const openListBtn = document.getElementById('openListBtn');
+  const ListWindow = document.getElementById('ListWindow');
+  const hideListBtn = document.getElementById('hideListBtn');
 
   const observer = new MutationObserver(() => {
     if (chatMessages.scrollHeight > chatMessages.clientHeight) {
@@ -30,8 +33,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
   observer.observe(chatMessages, { childList: true });
-
-  const displayedMessageIds = new Set();
 
   document.body.classList.add('loading');
   const overlay = document.getElementById('overlay');
@@ -53,15 +54,21 @@ document.addEventListener('DOMContentLoaded', async function() {
       menuContent.style.display = 'none';
     }
   });
-
   openChatBtn.addEventListener('click', (event) => {
-    event.preventDefault();
     menuContent.style.display = 'none';
+	ListWindow.classList.add('hidden');
     chatWindow.classList.remove('hidden');
   });
-
+  openListBtn.addEventListener('click', (event) => {
+    menuContent.style.display = 'none';
+    chatWindow.classList.add('hidden');
+	ListWindow.classList.remove('hidden');
+  });
   hideChatBtn.addEventListener('click', () => {
     chatWindow.classList.add('hidden');
+  });
+  hideListBtn.addEventListener('click', () => {
+    ListWindow.classList.add('hidden');
   });
 
   sendBtn.addEventListener('click', () => {

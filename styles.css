@@ -7,14 +7,12 @@ html, body {
   font-family: Arial, sans-serif;
   background-color: #808080;
 }
-
 body {
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
 }
-
 .loader {
   border: 16px solid #f3f3f3;
   border-radius: 50%;
@@ -23,17 +21,14 @@ body {
   height: 120px;
   animation: spin 2s linear infinite;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
 body.loading {
   overflow: hidden;
   filter: blur(5px);
 }
-
 .overlay {
   position: fixed;
   top: 0;
@@ -46,11 +41,19 @@ body.loading {
   align-items: center;
   z-index: 1000;
 }
-
-.hidden {
-  display: none;
+.desktop {
+  position: absolute;
+  top: 10px;
+  bottom: 80px;
+  left: 10px;
+  right: 10px;
+  background-color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
-
 .taskbar {
   position: absolute;
   bottom: 20px;
@@ -65,21 +68,25 @@ body.loading {
   border-radius: 15px;
   box-sizing: border-box;
 }
-
 .start-menu {
   position: relative;
 }
-
-.start-button {
-  background-color: #808080;
-  color: black;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 15px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+.start-menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
-
+.start-menu ul li {
+  padding: 10px 20px;
+}
+.start-menu ul li a {
+  text-decoration: none;
+  color: white;
+}
+.start-menu ul li a:hover {
+  background-color: #333;
+  color: white;
+}
 .menu-content {
   display: none;
   position: absolute;
@@ -90,51 +97,18 @@ body.loading {
   border-radius: 8px;
   margin-top: 5px;
 }
-
-.start-menu ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-
-.start-menu ul li {
+.start-button {
+  background-color: #808080;
+  color: black;
+  border: none;
   padding: 10px 20px;
+  border-radius: 15px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-
-.start-menu ul li a {
-  text-decoration: none;
-  color: white;
-}
-
-.start-menu ul li a:hover {
-  background-color: #333;
-  color: white;
-}
-
 .start-button:active + .menu-content, .menu-content:hover {
   display: block;
 }
-
-#clock {
-  color: white;
-  font-size: 18px;
-  margin-right: 10px;
-}
-
-.desktop {
-  position: absolute;
-  top: 10px;
-  bottom: 80px;
-  left: 10px;
-  right: 10px;
-  background-color: #333;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-  padding: 20px;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
 #star-container {
   position: absolute;
   top: 0;
@@ -144,7 +118,6 @@ body.loading {
   overflow: hidden;
   box-sizing: border-box;
 }
-
 .star {
   position: absolute;
   width: 4px;
@@ -153,14 +126,13 @@ body.loading {
   border-radius: 50%;
   box-shadow: 0 0 10px white;
 }
-
 .chat-window {
   position: fixed;
   top: 45%;
   left: 50%;
   transform: translate(-45%, -50%);
-  width: 720px; /* Adjusted width: 300px * 2.4 */
-  max-height: 750px; /* Adjusted height: 500px * 1.5 */
+  width: 720px; 
+  max-height: 750px;
   background-color: #808080;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -169,11 +141,6 @@ body.loading {
   z-index: 1000;
   overflow: hidden;
 }
-
-.hidden {
-  display: none;
-}
-
 .chat-header {
   display: flex;
   justify-content: space-between;
@@ -184,8 +151,7 @@ body.loading {
   border-top-right-radius: 10px;
   color: white;
 }
-
-.hide-button {
+.hideChat-button {
   background-color: #333;
   color: white;
   border-radius: 5px;
@@ -194,19 +160,16 @@ body.loading {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-
-.hide-button:hover {
+.hideChat-button:hover {
   background-color: #cc0000;
 }
-
 .webcam-container {
   display: flex;
-  justify-content: center; /* Center the webcam elements horizontally */
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px;
 }
-
 .webcam {
   width: 180px;
   height: 180px;
@@ -214,7 +177,6 @@ body.loading {
   background-color: #ddd;
   border-radius: 5px;
 }
-
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -223,12 +185,10 @@ body.loading {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
-
 .chat-input {
   display: flex;
   padding: 10px;
 }
-
 .chat-input textarea {
   flex: 1;
   padding: 5px;
@@ -239,31 +199,90 @@ body.loading {
   width: 100%;
   box-sizing: border-box;
 }
-
 .chat-buttons {
   display: flex;
   flex-direction: column;
   margin-left: 10px;
-  height: 120px; /* Same as textarea height */
+  height: 120px; 
   justify-content: space-between;
 }
-
 .chat-buttons button {
   background-color: #333;
   color: white;
   border-radius: 5px;
   border: none;
-  height: calc(33.33% - 5px); /* Adjust height to add space between buttons */
+  height: calc(33.33% - 5px);
   padding: 5px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-
-
 .chat-buttons button:hover {
   background-color: #555;
 }
-
+.List-window {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-45%, -50%);
+  width: 720px;
+  max-height: 750px; 
+  background-color: #808080;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+}
+.List-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #808080;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  color: white;
+}
+.List-controls {
+    display: flex;
+    align-items: center;
+}
+.List-nickname {
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 10px; 
+}
+.hideList-button {
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hideList-button:hover {
+  background-color: #cc0000;
+}
+.List-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+}
+.hidden {
+  display: none;
+}
+#clock {
+  color: white;
+  font-size: 18px;
+  margin-right: 10px;
+}
 @media (max-width: 600px) {
   .loader {
     border: 16px solid #f3f3f3;
@@ -273,12 +292,10 @@ body.loading {
     height: 60px;
     animation: spin 2s linear infinite;
   }
-
   body.loading {
     overflow: hidden;
     filter: blur(5px);
   }
-
   .overlay {
     position: fixed;
     top: 0;
@@ -291,25 +308,6 @@ body.loading {
     align-items: center;
     z-index: 1000;
   }
-
-  .hidden {
-    display: none;
-  }
-
-  .desktop {
-    top: 10px;
-    bottom: 80px;
-    left: 10px;
-    right: 10px;
-  }
-
-  .taskbar {
-    bottom: 20px;
-    left: 10px;
-    right: 10px;
-    padding: 5px;
-  }
-
   .chat-window {
     position: fixed;
     top: 45%;
@@ -325,27 +323,57 @@ body.loading {
     z-index: 1000;
     overflow: hidden;
   }
-
 .webcam-container {
   display: flex;
-  justify-content: center; /* Center the webcam elements horizontally */
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px;
 }
-
 .webcam {
-  width: 80px; /* 16:9 aspect ratio for a height of 100px */
+  width: 80px; 
   height: 80px;
   background-color: #ddd;
   border: 2px solid black;
   border-radius: 5px;
 }
-
+.List-window {
+    position: fixed;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    max-height: 580px;
+    background-color: #808080;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+ }
+ .List-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+}
+  .desktop {
+    top: 10px;
+    bottom: 80px;
+    left: 10px;
+    right: 10px;
+  }
+  .taskbar {
+    bottom: 20px;
+    left: 10px;
+    right: 10px;
+    padding: 5px;
+  }
   .hidden {
     display: none;
   }
-
   #clock {
     font-size: 16px;
     margin-right: 10px;
