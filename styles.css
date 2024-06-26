@@ -130,7 +130,7 @@ body.loading {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-width, -height);
+  transform: translate(-50%, -50%);
   width: 720px; 
   max-height: 750px;
   background-color: #808080;
