@@ -310,9 +310,9 @@ body.loading {
   }
   .chat-window {
     position: fixed;
-    top: 20%;
-    left: 20%;
-    transform: translate(-20%, -20%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 320px;
     max-height: 580px;
     background-color: #808080;
@@ -339,9 +339,9 @@ body.loading {
 }
 .List-window {
     position: fixed;
-    top: 20%;
-    left: 20%;
-    transform: translate(-20%, -20%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 320px;
     max-height: 580px;
     background-color: #808080;
