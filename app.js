@@ -13,9 +13,9 @@ setInterval(updateClock, 1000);
 updateClock();
 
 document.addEventListener('DOMContentLoaded', async function() {
-  const desktop = document.querySelector('.desktop');	
-  const startButton = document.querySelector('.start-button');
-  const menuContent = document.querySelector('.menu-content');
+  const desktop = document.getElementById('desktop');	
+  const startButton = document.getElementById('startBtn');
+  const menuContent = document.getElementById('menuCntnt');
   const openChatBtn = document.getElementById('openChatBtn');
   const openListBtn = document.getElementById('openListBtn');
   const chatWindow = document.getElementById('chatWindow');
@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   const broadcastBtn = document.getElementById('broadcastBtn');
   const voiceBtn = document.getElementById('voiceBtn');
   const hideListBtn = document.getElementById('hideListBtn');
-
   let userId;
 
   const observer = new MutationObserver(() => {
@@ -62,14 +61,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   openChatBtn.addEventListener('click', (event) => {
     menuContent.style.display = 'none';
-    ListWindow.classList.add('hidden');
-    chatWindow.classList.remove('hidden');
+	ListWindow.classList.add('hidden');
+	chatWindow.classList.remove('hidden');
   });
 
   openListBtn.addEventListener('click', (event) => {
     menuContent.style.display = 'none';
-    chatWindow.classList.add('hidden');
-    ListWindow.classList.remove('hidden');
+	ListWindow.classList.remove('hidden');
+	chatWindow.classList.add('hidden');
   });
 
   hideChatBtn.addEventListener('click', () => {
@@ -79,19 +78,4 @@ document.addEventListener('DOMContentLoaded', async function() {
   hideListBtn.addEventListener('click', () => {
     ListWindow.classList.add('hidden');
   });
-  
-  function checkBounds() {
-    const desktopRect = desktop.getBoundingClientRect();
-    const chatRect = chatWindow.getBoundingClientRect();
-    const ListRect = ListWindow.getBoundingClientRect();
-    if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
-      chatWindow.classList.add('hidden');
-    }
-    if (ListRect.right > desktopRect.right || ListRect.bottom > desktopRect.bottom) {
-      ListWindow.classList.add('hidden');
-    }
-  }
-  window.addEventListener('resize', checkBounds);
-  window.addEventListener('scroll', checkBounds);
-  checkBounds();
 });
