@@ -26,7 +26,17 @@ updateClock();
 
 async function createConnection(connectionUserId) {
   console.log(`Creating connection with user ${connectionUserId}`);
-  const peerConnection = new RTCPeerConnection();
+    const peerConnection = new RTCPeerConnection({
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' },
+      // Add TURN server configuration here if you have one
+      // { urls: 'turn:your-turn-server.com:3478', username: 'username', credential: 'password' },
+    ]
+  });
   peerConnections[connectionUserId] = peerConnection;
 
   // We'll add the stream later if it's available
