@@ -138,14 +138,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   broadcastBtn.addEventListener('click', async () => {
-    if (broadcastBtn.textContent === 'Start Broadcast') {
+    if (broadcastBtn.textContent === 'Broadcast') {
       const success = await startBroadcast();
       if (success) {
         broadcastBtn.textContent = 'Stop Broadcast';
       }
     } else {
       stopBroadcast();
-      broadcastBtn.textContent = 'Start Broadcast';
+      broadcastBtn.textContent = 'Broadcast';
     }
   });
 
