@@ -1,7 +1,7 @@
-import { signIn } from './firebase.js';
-import { getDatabase, ref, push, onChildAdded, onChildRemoved, onDisconnect, set, remove, onValue } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
+import { signIn, getDatabase } from './firebase.js';
+import { ref, push, onChildAdded, onChildRemoved, onDisconnect, set, remove, onValue, get } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 import { initWebRTC, createConnection, handleOffer, handleAnswer, handleCandidate, resetWebcamSpot, startBroadcast, stopBroadcast, closePeerConnection } from './webrtc.js';
-import { initializeNickname, setupNicknameListener, getNickname, setNickname } from './usersettings.js';
+import { initializeNickname, setupNicknameListener, getNickname, setNickname, deleteNickname } from './usersettings.js';
 
 const database = getDatabase();
 const connectionsRef = ref(database, 'connections');
@@ -9,6 +9,7 @@ const messagesRef = ref(database, 'messages');
 const nicknamesRef = ref(database, 'nicknames');
 
 let userId;
+let userNickname;
 
 function updateClock() {
   const clock = document.getElementById('clock');
@@ -37,20 +38,35 @@ async function handleMessage(snapshot) {
   chatMessages.appendChild(messageElement);
 }
 
-async function addUserToList(connectionUserId) {
-  console.log('Adding user to list:', connectionUserId);
-  const nickname = await getNickname(connectionUserId) || connectionUserId;
-  const listItem = document.createElement('div');
-  listItem.textContent = nickname;
-  listItem.classList.add('List-item');
-  listItem.setAttribute('data-user-id', connectionUserId);
-  ListContainer.appendChild(listItem);
+function logUserActivity(activity, nickname) {
+  const now = new Date();
+  const timestamp = now.toLocaleString();
+  const message = `[${timestamp}] ${nickname} ${activity}`;
+  const messageElement = document.createElement('div');
+  messageElement.textContent = message;
+  const chatMessages = document.getElementById('chatMessages');
+  if (chatMessages) {
+    chatMessages.appendChild(messageElement);
+    // Scroll to the bottom of the chat
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } else {
+    console.error('Chat messages container not found');
+  }
+}
 
-  // Listen for nickname changes
-  onValue(ref(database, `nicknames/${connectionUserId}`), (snapshot) => {
-    const updatedNickname = snapshot.val() || connectionUserId;
-    listItem.textContent = updatedNickname;
-  });
+async function addUserToList(connectionUserId, connectionNickname) {
+    console.log('Adding user to list:', connectionNickname);
+    const listItem = document.createElement('div');
+    listItem.textContent = connectionNickname;
+    listItem.classList.add('List-item');
+    listItem.setAttribute('data-user-id', connectionUserId);
+    ListContainer.appendChild(listItem);
+
+    // Listen for nickname changes
+    onValue(ref(database, `nicknames/${connectionUserId}`), (snapshot) => {
+        const updatedNickname = snapshot.val() || connectionNickname;
+        listItem.textContent = updatedNickname;
+    });
 }
 
 function removeUserFromList(connectionUserId) {
@@ -90,12 +106,16 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('overlay');
   overlay.classList.remove('hidden');
 
-  userId = await signIn();
-  console.log('Signed in with user ID:', userId);
+    userId = await signIn();
+    console.log('Signed in with user ID:', userId);
+
+    initWebRTC(userId);
+    userNickname = await initializeNickname(userId);
+    setupNicknameListener(userId);
+
+    // Log the user in with nickname
+    logUserActivity('logged in', userNickname);
   
-  initWebRTC(userId);
-  await initializeNickname(userId);
-  setupNicknameListener(userId);
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
@@ -182,26 +202,34 @@ document.addEventListener('DOMContentLoaded', async function() {
   window.addEventListener('resize', checkWindowFit);
   checkWindowFit();
 
-  const userRef = ref(database, `connections/${userId}`);
-  onDisconnect(userRef).remove();
-  set(userRef, true);
+    const userRef = ref(database, `connections/${userId}`);
+    onDisconnect(userRef).remove();
+    // Also remove the nickname when disconnecting
+    onDisconnect(ref(database, `nicknames/${userId}`)).remove();
+    set(userRef, userNickname);
   
-  onChildAdded(connectionsRef, async (snapshot) => {
-    const connectionUserId = snapshot.key;
-    console.log('New user connected:', connectionUserId);
-    if (connectionUserId !== userId) {
-      await createConnection(connectionUserId);
-      addUserToList(connectionUserId);
-    }
-  });
+    onChildAdded(connectionsRef, async (snapshot) => {
+        const connectionUserId = snapshot.key;
+        const connectionNickname = snapshot.val();
+        console.log('New user connected:', connectionNickname);
+        if (connectionUserId !== userId) {
+            await createConnection(connectionUserId);
+            await addUserToList(connectionUserId, connectionNickname);
+            logUserActivity('logged in', connectionNickname);
+        }
+    });
 
-  onChildRemoved(connectionsRef, (snapshot) => {
-    const connectionUserId = snapshot.key;
-    console.log('User disconnected:', connectionUserId);
-    removeUserFromList(connectionUserId);
-    resetWebcamSpot(connectionUserId);
-    closePeerConnection(connectionUserId);
-  });
+    onChildRemoved(connectionsRef, async (snapshot) => {
+        const connectionUserId = snapshot.key;
+        const connectionNickname = snapshot.val();
+        console.log('User disconnected:', connectionNickname);
+        removeUserFromList(connectionUserId);
+        resetWebcamSpot(connectionUserId);
+        closePeerConnection(connectionUserId);
+        logUserActivity('logged out', connectionNickname);
+        await deleteNickname(connectionUserId);
+    });
+
 
   onChildAdded(ref(database, 'offers'), handleOffer);
   onChildAdded(ref(database, 'answers'), handleAnswer);
@@ -212,4 +240,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Enable voice communication
     // ...
   });
+    window.addEventListener('beforeunload', async (event) => {
+        // Delete the nickname
+        await deleteNickname(userId);
+        
+        // Log the user out
+        logUserActivity('logged out', userNickname);
+        
+        // Remove the user from the connections list
+        const userRef = ref(database, `connections/${userId}`);
+        await remove(userRef);
+
+        // Optionally, you can add a confirmation dialog
+        event.preventDefault(); // Cancel the event
+        event.returnValue = ''; // Chrome requires returnValue to be set
+    });
+  
 });
