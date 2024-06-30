@@ -208,16 +208,28 @@ document.addEventListener('DOMContentLoaded', async function() {
     onDisconnect(ref(database, `nicknames/${userId}`)).remove();
     set(userRef, userNickname);
   
-    onChildAdded(connectionsRef, async (snapshot) => {
-        const connectionUserId = snapshot.key;
-        const connectionNickname = snapshot.val();
-        console.log('New user connected:', connectionNickname);
-        if (connectionUserId !== userId) {
-            await createConnection(connectionUserId);
-            await addUserToList(connectionUserId, connectionNickname);
-            logUserActivity('logged in', connectionNickname);
+onChildAdded(connectionsRef, async (snapshot) => {
+    const connectionUserId = snapshot.key;
+    const connectionNickname = snapshot.val();
+    console.log('New user connected:', connectionNickname);
+    if (connectionUserId !== userId) {
+        const peerConnection = await createConnection(connectionUserId);
+        await addUserToList(connectionUserId, connectionNickname);
+        logUserActivity('logged in', connectionNickname);
+        
+        // Trigger renegotiation if we're broadcasting
+        if (isBroadcasting) {
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                console.log('Sending offer to new user');
+                push(offersRef, { from: userId, to: connectionUserId, offer });
+            } catch (error) {
+                console.error('Error creating offer for new user:', error);
+            }
         }
-    });
+    }
+});
 
     onChildRemoved(connectionsRef, async (snapshot) => {
         const connectionUserId = snapshot.key;

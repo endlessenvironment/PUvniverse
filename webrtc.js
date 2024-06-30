@@ -8,6 +8,7 @@ const candidatesRef = ref(database, 'candidates');
 let userId;
 const peerConnections = {};
 let localStream = null;
+let isBroadcasting = false;
 
 export function initWebRTC(currentUserId) {
   userId = currentUserId;
@@ -58,6 +59,14 @@ export async function createConnection(connectionUserId) {
       console.error('Error creating offer:', error);
     }
   };
+
+
+  if (isBroadcasting && localStream) {
+    localStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, localStream);
+    });
+  }
+
 
   return peerConnection;
 }
@@ -151,6 +160,7 @@ export async function startBroadcast() {
       });
     });
 
+    isBroadcasting = true;
     return true;
   } catch (error) {
     console.error('Error accessing media devices:', error);
@@ -168,6 +178,7 @@ export function stopBroadcast() {
   }
   const localWebcamSpot = document.querySelector('.webcam');
   localWebcamSpot.srcObject = null;
+  isBroadcasting = false;
 }
 
 export function closePeerConnection(connectionUserId) {
