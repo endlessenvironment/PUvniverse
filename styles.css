@@ -171,11 +171,12 @@ body.loading {
   padding: 10px;
 }
 .webcam {
-  width: 180px;
-  height: 180px;
-  border: 2px solid black;
   background-color: #ddd;
+  border: 2px solid black;
   border-radius: 5px;
+  object-fit: contain;
+  height: 180px;
+width: 180px;
 }
 .chat-messages {
   flex: 1;
@@ -270,10 +271,16 @@ body.loading {
 }
 .List-container {
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
   padding: 10px;
+  overflow-y: auto;
+}
+.List-item {
+  background-color: #444;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
 }
 .hidden {
   display: none;
@@ -323,21 +330,20 @@ body.loading {
     z-index: 1000;
     overflow: hidden;
   }
-.webcam-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-}
-.webcam {
-  width: 80px; 
-  height: 80px;
-  background-color: #ddd;
-  border: 2px solid black;
-  border-radius: 5px;
-}
-.List-window {
+  .webcam-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+  .webcam {
+    max-width: 80px;
+    max-height: 80px;
+	height: 80px;
+	width: 80px;
+  }
+  .List-window {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -351,23 +357,16 @@ body.loading {
     flex-direction: column;
     z-index: 1000;
     overflow: hidden;
- }
-.List-nickname {
+  }
+  .List-nickname {
     background-color: #333;
     color: white;
     border-radius: 5px;
     border: none;
-	width: 90px;
+    width: 90px;
     padding: 5px 10px;
     margin-right: 10px; 
-} 
-.List-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-}
+  } 
   .desktop {
     top: 10px;
     bottom: 80px;
@@ -380,11 +379,17 @@ body.loading {
     right: 10px;
     padding: 5px;
   }
-  .hidden {
-    display: none;
-  }
   #clock {
     font-size: 16px;
     margin-right: 10px;
+  }
+}
+
+@media (min-width: 601px) {
+  .webcam {
+    max-width: 180px;
+    max-height: 180px;
+	height: 180px;
+	width: 180px;
   }
 }

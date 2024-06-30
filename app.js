@@ -10,6 +10,8 @@ const nicknamesRef = ref(database, 'nicknames');
 
 let userId;
 let userNickname;
+let chatWindowWasVisible = false;
+let listWindowWasVisible = false;
 
 function updateClock() {
   const clock = document.getElementById('clock');
@@ -47,7 +49,6 @@ function logUserActivity(activity, nickname) {
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
     chatMessages.appendChild(messageElement);
-    // Scroll to the bottom of the chat
     chatMessages.scrollTop = chatMessages.scrollHeight;
   } else {
     console.error('Chat messages container not found');
@@ -62,7 +63,6 @@ async function addUserToList(connectionUserId, connectionNickname) {
     listItem.setAttribute('data-user-id', connectionUserId);
     ListContainer.appendChild(listItem);
 
-    // Listen for nickname changes
     onValue(ref(database, `nicknames/${connectionUserId}`), (snapshot) => {
         const updatedNickname = snapshot.val() || connectionNickname;
         listItem.textContent = updatedNickname;
@@ -74,6 +74,50 @@ function removeUserFromList(connectionUserId) {
   const listItem = ListContainer.querySelector(`[data-user-id="${connectionUserId}"]`);
   if (listItem) {
     ListContainer.removeChild(listItem);
+  }
+}
+
+function checkWindowFit() {
+  const desktop = document.getElementById('desktop');
+  const chatWindow = document.getElementById('chatWindow');
+  const listWindow = document.getElementById('ListWindow');
+  const desktopRect = desktop.getBoundingClientRect();
+  const chatRect = chatWindow.getBoundingClientRect();
+  const listRect = listWindow.getBoundingClientRect();
+
+  if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
+    if (!chatWindow.classList.contains('hidden')) {
+      chatWindowWasVisible = true;
+      chatWindow.classList.add('hidden');
+    }
+  } else if (chatWindowWasVisible) {
+    chatWindow.classList.remove('hidden');
+    chatWindowWasVisible = false;
+  }
+
+  if (listRect.right > desktopRect.right || listRect.bottom > desktopRect.bottom) {
+    if (!listWindow.classList.contains('hidden')) {
+      listWindowWasVisible = true;
+      listWindow.classList.add('hidden');
+    }
+  } else if (listWindowWasVisible) {
+    listWindow.classList.remove('hidden');
+    listWindowWasVisible = false;
+  }
+}
+
+function showWindow(windowToShow, windowToHide) {
+  const desktop = document.getElementById('desktop');
+  const desktopRect = desktop.getBoundingClientRect();
+  const windowRect = windowToShow.getBoundingClientRect();
+
+  if (windowRect.right <= desktopRect.right && windowRect.bottom <= desktopRect.bottom) {
+    windowToShow.classList.remove('hidden');
+    windowToHide.classList.add('hidden');
+    chatWindowWasVisible = (windowToShow === chatWindow);
+    listWindowWasVisible = (windowToShow === ListWindow);
+  } else {
+    alert("Window doesn't fit in the desktop");
   }
 }
 
@@ -113,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     userNickname = await initializeNickname(userId);
     setupNicknameListener(userId);
 
-    // Log the user in with nickname
     logUserActivity('logged in', userNickname);
   
 
@@ -176,35 +219,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       console.log('Nickname updated:', newNickname);
     }
   });
-  
-  function checkWindowFit() {
-    const desktopRect = desktop.getBoundingClientRect();
-    const chatRect = chatWindow.getBoundingClientRect();
-    const ListRect = ListWindow.getBoundingClientRect();
-    if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
-      chatWindow.classList.add('hidden');
-      console.log('Chat window does not fit in the desktop and has been minimized');
-      alert("Chat does not fit in the desktop and has been minimized");
-    }
-    if (ListRect.right > desktopRect.right || ListRect.bottom > desktopRect.bottom) {
-      ListWindow.classList.add('hidden');
-      console.log('List window does not fit in the desktop and has been minimized');
-      alert("List does not fit in the desktop and has been minimized");
-    }
-  }
-  
-  function showWindow(windowToShow, windowToHide) {
-    windowToShow.classList.remove('hidden');
-    windowToHide.classList.add('hidden');
-    checkWindowFit();
-  }  
-  
-  window.addEventListener('resize', checkWindowFit);
+
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      checkWindowFit();
+      setTimeout(checkWindowFit, 50);
+    }, 250);
+  });
+
   checkWindowFit();
 
     const userRef = ref(database, `connections/${userId}`);
     onDisconnect(userRef).remove();
-    // Also remove the nickname when disconnecting
     onDisconnect(ref(database, `nicknames/${userId}`)).remove();
     set(userRef, userNickname);
   
@@ -229,7 +257,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         logUserActivity('logged out', connectionNickname);
         await deleteNickname(connectionUserId);
     });
-
 
   onChildAdded(ref(database, 'offers'), handleOffer);
   onChildAdded(ref(database, 'answers'), handleAnswer);
