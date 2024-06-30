@@ -241,18 +241,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // ...
   });
     window.addEventListener('beforeunload', async (event) => {
-        // Delete the nickname
         await deleteNickname(userId);
-        
-        // Log the user out
         logUserActivity('logged out', userNickname);
-        
-        // Remove the user from the connections list
         const userRef = ref(database, `connections/${userId}`);
         await remove(userRef);
-
-        // Optionally, you can add a confirmation dialog
-        event.preventDefault(); // Cancel the event
         event.returnValue = ''; // Chrome requires returnValue to be set
     });
   
