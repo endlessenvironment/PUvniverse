@@ -244,14 +244,6 @@ body.loading {
   border-top-right-radius: 10px;
   color: white;
 }
-.List-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px;
-  max-height: 240px;
-  overflow-y: auto;
-}
 .List-controls {
     display: flex;
     align-items: center;
@@ -263,14 +255,6 @@ body.loading {
     border: none;
     padding: 5px 10px;
     margin-right: 10px; 
-}
-.List-item {
-  background-color: #333;
-  color: white;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  word-break: break-word;
 }
 .hideList-button {
   background-color: #333;
@@ -284,7 +268,13 @@ body.loading {
 .hideList-button:hover {
   background-color: #cc0000;
 }
-
+.List-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+}
 .hidden {
   display: none;
 }
@@ -371,13 +361,13 @@ body.loading {
     padding: 5px 10px;
     margin-right: 10px; 
 } 
-  .List-container {
-    max-height: 200px; 
-  }
-  .List-item {
-    padding: 8px;
-    font-size: 14px;
-  }
+.List-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+}
   .desktop {
     top: 10px;
     bottom: 80px;
