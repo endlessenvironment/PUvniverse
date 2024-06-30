@@ -1,6 +1,6 @@
 import { signIn, getDatabase } from './firebase.js';
 import { ref, push, onChildAdded, onChildRemoved, onDisconnect, set, remove, onValue, get } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
-import { initWebRTC, createConnection, handleOffer, handleAnswer, handleCandidate, resetWebcamSpot, startBroadcast, stopBroadcast, closePeerConnection } from './webrtc.js';
+import { initWebRTC, createConnection, handleOffer, handleAnswer, handleCandidate, resetWebcamSpot, startBroadcast, stopBroadcast, closePeerConnection, isBroadcasting } from './webrtc.js';
 import { initializeNickname, setupNicknameListener, getNickname, setNickname, deleteNickname } from './usersettings.js';
 
 const database = getDatabase();

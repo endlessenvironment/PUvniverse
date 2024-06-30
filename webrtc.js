@@ -188,3 +188,4 @@ export function closePeerConnection(connectionUserId) {
     delete peerConnections[connectionUserId];
   }
 }
+export { isBroadcasting };
