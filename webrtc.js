@@ -9,34 +9,8 @@ let userId;
 const peerConnections = {};
 let localStream = null;
 
-function getMaxWebcamSize() {
-  return window.innerWidth <= 600 ? 80 : 180; // 80px for mobile, 180px for desktop
-}
-
-function calculateResizedDimensions(width, height) {
-  const maxSize = getMaxWebcamSize();
-  
-  if (width <= maxSize && height <= maxSize) {
-    return { width, height };
-  }
-  
-  const aspectRatio = width / height;
-  if (width > height) {
-    return {
-      width: maxSize,
-      height: Math.round(maxSize / aspectRatio)
-    };
-  } else {
-    return {
-      width: Math.round(maxSize * aspectRatio),
-      height: maxSize
-    };
-  }
-}
-
 export function initWebRTC(currentUserId) {
   userId = currentUserId;
-  window.addEventListener('resize', handleResize);
 }
 
 export async function createConnection(connectionUserId) {
@@ -64,13 +38,6 @@ export async function createConnection(connectionUserId) {
     }
     if (videoElement) {
       videoElement.srcObject = remoteStream;
-      
-      videoElement.addEventListener('loadedmetadata', () => {
-        const { width, height } = calculateResizedDimensions(videoElement.videoWidth, videoElement.videoHeight);
-        
-        videoElement.style.width = `${width}px`;
-        videoElement.style.height = `${height}px`;
-      });
     }
   };
 
@@ -103,12 +70,6 @@ export async function handleOffer(snapshot) {
 
     try {
       await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-      
-      // Check if the offer indicates the stream has stopped
-      if (data.offer.sdp.includes('a=inactive') || data.offer.sdp.includes('a=recvonly')) {
-        resetWebcamSpot(data.from);
-      }
-      
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
       console.log('Sending answer');
@@ -170,10 +131,6 @@ export function resetWebcamSpot(connectionUserId) {
     if (spot.getAttribute('data-user-id') === connectionUserId) {
       spot.srcObject = null;
       spot.removeAttribute('data-user-id');
-      const maxSize = getMaxWebcamSize();
-      spot.style.width = `${maxSize}px`;
-      spot.style.height = `${maxSize}px`;
-      
       break;
     }
   }
@@ -186,13 +143,6 @@ export async function startBroadcast() {
     const localWebcamSpot = document.querySelector('.webcam');
     localWebcamSpot.srcObject = localStream;
     localWebcamSpot.muted = true;
-
-    localWebcamSpot.addEventListener('loadedmetadata', () => {
-      const { width, height } = calculateResizedDimensions(localWebcamSpot.videoWidth, localWebcamSpot.videoHeight);
-      
-      localWebcamSpot.style.width = `${width}px`;
-      localWebcamSpot.style.height = `${height}px`;
-    });
 
     Object.keys(peerConnections).forEach(connectionUserId => {
       const peerConnection = peerConnections[connectionUserId];
@@ -226,15 +176,4 @@ export function closePeerConnection(connectionUserId) {
     peerConnection.close();
     delete peerConnections[connectionUserId];
   }
-}
-
-function handleResize() {
-  const webcams = document.querySelectorAll('.webcam');
-  webcams.forEach(webcam => {
-    if (webcam.videoWidth && webcam.videoHeight) {
-      const { width, height } = calculateResizedDimensions(webcam.videoWidth, webcam.videoHeight);
-      webcam.style.width = `${width}px`;
-      webcam.style.height = `${height}px`;
-    }
-  });
 }
