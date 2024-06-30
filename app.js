@@ -7,6 +7,8 @@ const database = getDatabase();
 const connectionsRef = ref(database, 'connections');
 const messagesRef = ref(database, 'messages');
 const nicknamesRef = ref(database, 'nicknames');
+const offersRef = ref(database, 'offers');
+
 
 let userId;
 let userNickname;
