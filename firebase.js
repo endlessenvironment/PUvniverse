@@ -2,9 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.1/firebase
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-auth.js";
 import { getDatabase as _getDatabase } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 
-// ... (existing code)
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyCR7f4cihuwGw37oM69v0MAtgRydkmm5b4",
   authDomain: "endlesspuvni.firebaseapp.com",
@@ -29,4 +26,5 @@ export function signIn() {
       console.error('Error signing in!', error);
     });
 }
+
 export const getDatabase = _getDatabase;

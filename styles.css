@@ -7,12 +7,14 @@ html, body {
   font-family: Arial, sans-serif;
   background-color: #808080;
 }
+
 body {
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
 }
+
 .loader {
   border: 16px solid #f3f3f3;
   border-radius: 50%;
@@ -21,14 +23,17 @@ body {
   height: 120px;
   animation: spin 2s linear infinite;
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
 body.loading {
   overflow: hidden;
   filter: blur(5px);
 }
+
 .overlay {
   position: fixed;
   top: 0;
@@ -41,6 +46,7 @@ body.loading {
   align-items: center;
   z-index: 1000;
 }
+
 .desktop {
   position: absolute;
   top: 10px;
@@ -54,6 +60,7 @@ body.loading {
   overflow: hidden;
   box-sizing: border-box;
 }
+
 .taskbar {
   position: absolute;
   bottom: 20px;
@@ -68,25 +75,31 @@ body.loading {
   border-radius: 15px;
   box-sizing: border-box;
 }
+
 .start-menu {
   position: relative;
 }
+
 .start-menu ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
 }
+
 .start-menu ul li {
   padding: 10px 20px;
 }
+
 .start-menu ul li a {
   text-decoration: none;
   color: white;
 }
+
 .start-menu ul li a:hover {
   background-color: #333;
   color: white;
 }
+
 .menu-content {
   display: none;
   position: absolute;
@@ -97,6 +110,7 @@ body.loading {
   border-radius: 8px;
   margin-top: 5px;
 }
+
 .start-button {
   background-color: #808080;
   color: black;
@@ -106,9 +120,11 @@ body.loading {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
 .start-button:active + .menu-content, .menu-content:hover {
   display: block;
 }
+
 #star-container {
   position: absolute;
   top: 0;
@@ -118,6 +134,7 @@ body.loading {
   overflow: hidden;
   box-sizing: border-box;
 }
+
 .star {
   position: absolute;
   width: 4px;
@@ -126,6 +143,7 @@ body.loading {
   border-radius: 50%;
   box-shadow: 0 0 10px white;
 }
+
 .chat-window {
   position: fixed;
   top: 20%;
@@ -141,6 +159,7 @@ body.loading {
   z-index: 1000;
   overflow: hidden;
 }
+
 .chat-header {
   display: flex;
   justify-content: space-between;
@@ -151,6 +170,7 @@ body.loading {
   border-top-right-radius: 10px;
   color: white;
 }
+
 .hideChat-button {
   background-color: #333;
   color: white;
@@ -160,9 +180,11 @@ body.loading {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
 .hideChat-button:hover {
   background-color: #cc0000;
 }
+
 .webcam-container {
   display: flex;
   justify-content: center;
@@ -170,6 +192,7 @@ body.loading {
   gap: 10px;
   padding: 10px;
 }
+
 .webcam {
   width: 180px;
   height: 180px;
@@ -177,6 +200,7 @@ body.loading {
   background-color: #ddd;
   border-radius: 5px;
 }
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -185,10 +209,12 @@ body.loading {
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
 .chat-input {
   display: flex;
   padding: 10px;
 }
+
 .chat-input textarea {
   flex: 1;
   padding: 5px;
@@ -199,6 +225,7 @@ body.loading {
   width: 100%;
   box-sizing: border-box;
 }
+
 .chat-buttons {
   display: flex;
   flex-direction: column;
@@ -206,6 +233,7 @@ body.loading {
   height: 120px; 
   justify-content: space-between;
 }
+
 .chat-buttons button {
   background-color: #333;
   color: white;
@@ -216,9 +244,11 @@ body.loading {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
 .chat-buttons button:hover {
   background-color: #555;
 }
+
 .List-window {
   position: fixed;
   top: 20%;
@@ -234,6 +264,7 @@ body.loading {
   z-index: 1000;
   overflow: hidden;
 }
+
 .List-header {
   display: flex;
   justify-content: space-between;
@@ -244,41 +275,44 @@ body.loading {
   border-top-right-radius: 10px;
   color: white;
 }
+
 .List-container {
   display: flex;
-  flex-direction: column; /* Changed from flex-wrap: wrap to column */
+  flex-direction: column;
   gap: 10px;
   padding: 10px;
-  max-height: 500px; /* Adjust as needed */
-  overflow-y: auto; /* Add scrollbar if content exceeds max-height */
+  max-height: 500px;
+  overflow-y: auto;
 }
 
-/* Add new styles for .List-item */
 .List-item {
-  border: 2px solid #333; /* Add a border */
-  border-radius: 10px; /* Add rounded corners */
+  border: 2px solid #333;
+  border-radius: 10px;
   padding: 10px;
-  background-color: #333; /* Light background for contrast */
+  background-color: #333;
   color: white;
   font-size: 16px;
   transition: background-color 0.3s ease;
 }
 
 .List-item:hover {
-  background-color: #e0e0e0; /* Slightly darker on hover */
+  background-color: #e0e0e0;
 }
+
 .List-controls {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
+
 .List-nickname {
-    background-color: #333;
-    color: white;
-    border-radius: 5px;
-    border: none;
-    padding: 5px 10px;
-    margin-right: 10px; 
+  background-color: #333;
+  color: white;
+  border-radius: 5px;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 10px; 
 }
+
 .hideList-button {
   background-color: #333;
   color: white;
@@ -288,6 +322,7 @@ body.loading {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
 .hideList-button:hover {
   background-color: #cc0000;
 }
@@ -295,111 +330,55 @@ body.loading {
 .hidden {
   display: none;
 }
+
 #clock {
   color: white;
   font-size: 18px;
   margin-right: 10px;
 }
+
 @media (max-width: 600px) {
   .loader {
-    border: 16px solid #f3f3f3;
-    border-radius: 50%;
-    border-top: 16px solid #3498db;
     width: 60px;
     height: 60px;
-    animation: spin 2s linear infinite;
   }
-  body.loading {
-    overflow: hidden;
-    filter: blur(5px);
-  }
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  .chat-window {
-    position: fixed;
+
+  .chat-window, .List-window {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 320px;
     max-height: 580px;
-    background-color: #808080;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    z-index: 1000;
-    overflow: hidden;
   }
-.webcam-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-}
-.webcam {
-  width: 80px; 
-  height: 80px;
-  background-color: #ddd;
-  border: 2px solid black;
-  border-radius: 5px;
-}
-.List-window {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 320px;
-    max-height: 580px;
-    background-color: #808080;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    z-index: 1000;
-    overflow: hidden;
- }
-.List-nickname {
-    background-color: #333;
-    color: white;
-    border-radius: 5px;
-    border: none;
-	width: 90px;
-    padding: 5px 10px;
-    margin-right: 10px; 
-} 
-.List-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-}
+
+  .webcam-container {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .webcam {
+    width: 80px; 
+    height: 80px;
+  }
+
+  .List-nickname {
+    width: 90px;
+  }
+
   .desktop {
     top: 10px;
     bottom: 80px;
     left: 10px;
     right: 10px;
   }
+
   .taskbar {
     bottom: 20px;
     left: 10px;
     right: 10px;
     padding: 5px;
   }
-  .hidden {
-    display: none;
-  }
+
   #clock {
     font-size: 16px;
     margin-right: 10px;

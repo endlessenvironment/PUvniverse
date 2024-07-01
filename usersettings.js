@@ -1,12 +1,10 @@
-// usersettings.js
-
 import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
 import { setCookie, getCookie, eraseCookie } from './cookies.js';
 
 const database = getDatabase();
 
 export async function setNickname(userId, nickname) {
-    setCookie(`nickname_${userId}`, nickname, 30); // Store for 30 days
+    setCookie(`nickname_${userId}`, nickname, 30);
     try {
         await set(ref(database, `nicknames/${userId}`), nickname);
         await set(ref(database, `connections/${userId}`), nickname);
@@ -18,8 +16,6 @@ export async function setNickname(userId, nickname) {
     }
 }
 
-// ... (rest of the code remains the same)
-
 export async function getNickname(userId) {
     const cookieNickname = getCookie(`nickname_${userId}`);
     if (cookieNickname) {
@@ -30,7 +26,7 @@ export async function getNickname(userId) {
         const snapshot = await get(ref(database, `nicknames/${userId}`));
         if (snapshot.exists()) {
             const nickname = snapshot.val();
-            setCookie(`nickname_${userId}`, nickname, 30); // Store for 30 days
+            setCookie(`nickname_${userId}`, nickname, 30);
             return nickname;
         } else {
             console.log("No nickname found");

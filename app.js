@@ -25,14 +25,12 @@ updateClock();
 
 async function sendMessage(message) {
   const nickname = await getNickname(userId) || userId;
-  console.log('Sending message:', message);
   push(messagesRef, { from: nickname, message });
 }
 
 async function handleMessage(snapshot) {
   const data = snapshot.val();
   const senderNickname = await getNickname(data.from) || data.from;
-  console.log('Received message:', data.message);
   const messageElement = document.createElement('div');
   messageElement.textContent = `${senderNickname}: ${data.message}`;
   chatMessages.appendChild(messageElement);
@@ -47,7 +45,6 @@ function logUserActivity(activity, nickname) {
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages) {
     chatMessages.appendChild(messageElement);
-    // Scroll to the bottom of the chat
     chatMessages.scrollTop = chatMessages.scrollHeight;
   } else {
     console.error('Chat messages container not found');
@@ -55,14 +52,12 @@ function logUserActivity(activity, nickname) {
 }
 
 async function addUserToList(connectionUserId, connectionNickname) {
-    console.log('Adding user to list:', connectionNickname);
     const listItem = document.createElement('div');
     listItem.textContent = connectionNickname;
     listItem.classList.add('List-item');
     listItem.setAttribute('data-user-id', connectionUserId);
     ListContainer.appendChild(listItem);
 
-    // Listen for nickname changes
     onValue(ref(database, `nicknames/${connectionUserId}`), (snapshot) => {
         const updatedNickname = snapshot.val() || connectionNickname;
         listItem.textContent = updatedNickname;
@@ -70,7 +65,6 @@ async function addUserToList(connectionUserId, connectionNickname) {
 }
 
 function removeUserFromList(connectionUserId) {
-  console.log('Removing user from list:', connectionUserId);
   const listItem = ListContainer.querySelector(`[data-user-id="${connectionUserId}"]`);
   if (listItem) {
     ListContainer.removeChild(listItem);
@@ -106,16 +100,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('overlay');
   overlay.classList.remove('hidden');
 
-    userId = await signIn();
-    console.log('Signed in with user ID:', userId);
+  userId = await signIn();
+  initWebRTC(userId);
+  userNickname = await initializeNickname(userId);
+  setupNicknameListener(userId);
 
-    initWebRTC(userId);
-    userNickname = await initializeNickname(userId);
-    setupNicknameListener(userId);
-
-    // Log the user in with nickname
-    logUserActivity('logged in', userNickname);
-  
+  logUserActivity('logged in', userNickname);
 
   document.body.classList.remove('loading');
   overlay.classList.add('hidden');
@@ -157,29 +147,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 
-broadcastBtn.addEventListener('click', async () => {
-  if (broadcastBtn.textContent === 'Broadcast') {
-    console.log('Starting broadcast');
-    const success = await startBroadcast();
-    if (success) {
-      broadcastBtn.textContent = 'Stop Broadcast';
-      console.log('Broadcast started successfully');
+  broadcastBtn.addEventListener('click', async () => {
+    if (broadcastBtn.textContent === 'Broadcast') {
+      const success = await startBroadcast();
+      if (success) {
+        broadcastBtn.textContent = 'Stop Broadcast';
+      }
     } else {
-      console.log('Failed to start broadcast');
+      stopBroadcast();
+      broadcastBtn.textContent = 'Broadcast';
     }
-  } else {
-    console.log('Stopping broadcast');
-    stopBroadcast();
-    broadcastBtn.textContent = 'Broadcast';
-    console.log('Broadcast stopped');
-  }
-});
+  });
 
   nicknameInput.addEventListener('change', async () => {
     const newNickname = nicknameInput.value.trim();
     if (newNickname) {
       await setNickname(userId, newNickname);
-      console.log('Nickname updated:', newNickname);
     }
   });
   
@@ -189,12 +172,10 @@ broadcastBtn.addEventListener('click', async () => {
     const ListRect = ListWindow.getBoundingClientRect();
     if (chatRect.right > desktopRect.right || chatRect.bottom > desktopRect.bottom) {
       chatWindow.classList.add('hidden');
-      console.log('Chat window does not fit in the desktop and has been minimized');
       alert("Chat does not fit in the desktop and has been minimized");
     }
     if (ListRect.right > desktopRect.right || ListRect.bottom > desktopRect.bottom) {
       ListWindow.classList.add('hidden');
-      console.log('List window does not fit in the desktop and has been minimized');
       alert("List does not fit in the desktop and has been minimized");
     }
   }
@@ -208,38 +189,31 @@ broadcastBtn.addEventListener('click', async () => {
   window.addEventListener('resize', checkWindowFit);
   checkWindowFit();
 
-    const userRef = ref(database, `connections/${userId}`);
-    onDisconnect(userRef).remove();
-    // Also remove the nickname when disconnecting
-    onDisconnect(ref(database, `nicknames/${userId}`)).remove();
-    set(userRef, userNickname);
+  const userRef = ref(database, `connections/${userId}`);
+  onDisconnect(userRef).remove();
+  onDisconnect(ref(database, `nicknames/${userId}`)).remove();
+  set(userRef, userNickname);
   
-onChildAdded(connectionsRef, async (snapshot) => {
+  onChildAdded(connectionsRef, async (snapshot) => {
     const connectionUserId = snapshot.key;
     const connectionNickname = snapshot.val();
-    console.log('New user connected:', connectionNickname, 'with ID:', connectionUserId);
     if (connectionUserId !== userId) {
         await createConnection(connectionUserId);
         await addUserToList(connectionUserId, connectionNickname);
         logUserActivity('logged in', connectionNickname);
-        
-        // Send stream to new user if we're broadcasting
-        console.log('Calling sendStreamToNewUser');
         sendStreamToNewUser(connectionUserId);
     }
-});
+  });
 
-    onChildRemoved(connectionsRef, async (snapshot) => {
-        const connectionUserId = snapshot.key;
-        const connectionNickname = snapshot.val();
-        console.log('User disconnected:', connectionNickname);
-        removeUserFromList(connectionUserId);
-        resetWebcamSpot(connectionUserId);
-        closePeerConnection(connectionUserId);
-        logUserActivity('logged out', connectionNickname);
-        await deleteNickname(connectionUserId);
-    });
-
+  onChildRemoved(connectionsRef, async (snapshot) => {
+    const connectionUserId = snapshot.key;
+    const connectionNickname = snapshot.val();
+    removeUserFromList(connectionUserId);
+    resetWebcamSpot(connectionUserId);
+    closePeerConnection(connectionUserId);
+    logUserActivity('logged out', connectionNickname);
+    await deleteNickname(connectionUserId);
+  });
 
   onChildAdded(ref(database, 'offers'), handleOffer);
   onChildAdded(ref(database, 'answers'), handleAnswer);
@@ -247,15 +221,13 @@ onChildAdded(connectionsRef, async (snapshot) => {
   onChildAdded(messagesRef, handleMessage);
 
   voiceBtn.addEventListener('click', () => {
-    // Enable voice communication
-    // ...
   });
-    window.addEventListener('beforeunload', async (event) => {
-        await deleteNickname(userId);
-        logUserActivity('logged out', userNickname);
-        const userRef = ref(database, `connections/${userId}`);
-        await remove(userRef);
-        event.returnValue = ''; // Chrome requires returnValue to be set
-    });
-  
+
+  window.addEventListener('beforeunload', async (event) => {
+    await deleteNickname(userId);
+    logUserActivity('logged out', userNickname);
+    const userRef = ref(database, `connections/${userId}`);
+    await remove(userRef);
+    event.returnValue = '';
+  });
 });
