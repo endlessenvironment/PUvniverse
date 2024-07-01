@@ -38,6 +38,7 @@ export async function createConnection(connectionUserId) {
     if (videoElement) {
       videoElement.srcObject = remoteStream;
       videoElement.onloadedmetadata = () => {
+        setWebcamSpotSize(videoElement, remoteStream);
         videoElement.play().catch(error => {
           console.error('Error playing video:', error);
         });
@@ -128,9 +129,29 @@ export function resetWebcamSpot(connectionUserId) {
     if (spot.getAttribute('data-user-id') === connectionUserId) {
       spot.srcObject = null;
       spot.removeAttribute('data-user-id');
+      spot.style.width = '';
+      spot.style.height = '';
       break;
     }
   }
+}
+
+function setWebcamSpotSize(videoElement, stream) {
+  const track = stream.getVideoTracks()[0];
+  const settings = track.getSettings();
+  const aspectRatio = settings.width / settings.height;
+  
+  let maxSize = window.innerWidth <= 600 ? 80 : 180;
+  let width = Math.min(settings.width, maxSize);
+  let height = width / aspectRatio;
+  
+  if (height > maxSize) {
+    height = maxSize;
+    width = height * aspectRatio;
+  }
+  
+  videoElement.style.width = `${width}px`;
+  videoElement.style.height = `${height}px`;
 }
 
 export async function startBroadcast() {
@@ -139,6 +160,7 @@ export async function startBroadcast() {
     const localWebcamSpot = document.querySelector('.webcam');
     localWebcamSpot.srcObject = localStream;
     localWebcamSpot.muted = true;
+    setWebcamSpotSize(localWebcamSpot, localStream);
 
     Object.keys(peerConnections).forEach(connectionUserId => {
       sendStreamToUser(connectionUserId);
@@ -161,6 +183,8 @@ export function stopBroadcast() {
   }
   const localWebcamSpot = document.querySelector('.webcam');
   localWebcamSpot.srcObject = null;
+  localWebcamSpot.style.width = '';
+  localWebcamSpot.style.height = '';
   isBroadcasting = false;
 }
 
