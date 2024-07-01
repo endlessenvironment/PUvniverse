@@ -165,7 +165,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       await setNickname(userId, newNickname);
     }
   });
-  
+  async function handleBroadcastStopped(snapshot) {
+  const data = snapshot.val();
+  if (data.from !== userId) {
+    resetWebcamSpot(data.from);
+  }
+  await remove(snapshot.ref);
+}
   function checkWindowFit() {
     const desktopRect = desktop.getBoundingClientRect();
     const chatRect = chatWindow.getBoundingClientRect();
@@ -214,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     logUserActivity('logged out', connectionNickname);
     await deleteNickname(connectionUserId);
   });
-
+  onChildAdded(ref(database, 'broadcastStopped'), handleBroadcastStopped);
   onChildAdded(ref(database, 'offers'), handleOffer);
   onChildAdded(ref(database, 'answers'), handleAnswer);
   onChildAdded(ref(database, 'candidates'), handleCandidate);

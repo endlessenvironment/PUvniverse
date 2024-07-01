@@ -45,13 +45,18 @@ export async function createConnection(connectionUserId) {
       };
     }
   };
-
-  peerConnection.onicecandidate = (event) => {
+peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       push(candidatesRef, { from: userId, to: connectionUserId, candidate: event.candidate.toJSON() });
     }
   };
-
+  peerConnection.oniceconnectionstatechange = () => {
+    if (peerConnection.iceConnectionState === 'disconnected' || 
+        peerConnection.iceConnectionState === 'closed') {
+      resetWebcamSpot(connectionUserId);
+    }
+  };
+  
   peerConnection.onnegotiationneeded = async () => {
     try {
       const offer = await peerConnection.createOffer();
@@ -186,6 +191,12 @@ export function stopBroadcast() {
   localWebcamSpot.style.width = '';
   localWebcamSpot.style.height = '';
   isBroadcasting = false;
+  notifyBroadcastStopped();
+}
+
+function notifyBroadcastStopped() {
+  const broadcastStoppedRef = ref(database, 'broadcastStopped');
+  push(broadcastStoppedRef, { from: userId, timestamp: Date.now() });
 }
 
 export function sendStreamToNewUser(connectionUserId) {
