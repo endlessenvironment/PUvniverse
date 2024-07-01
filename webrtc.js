@@ -6,8 +6,9 @@ const answersRef = ref(database, 'answers');
 const candidatesRef = ref(database, 'candidates');
 
 let userId;
-const peerConnections = {};
 let localStream = null;
+let isBroadcasting = false;
+const peerConnections = {};
 
 export function initWebRTC(currentUserId) {
   userId = currentUserId;
@@ -27,19 +28,31 @@ export async function createConnection(connectionUserId) {
   peerConnections[connectionUserId] = peerConnection;
 
   peerConnection.ontrack = (event) => {
-    console.log('Received remote stream');
-    const remoteStream = event.streams[0];
-    let videoElement = document.querySelector(`.webcam[data-user-id="${connectionUserId}"]`);
-    if (!videoElement) {
-      videoElement = getAvailableWebcamSpot();
-      if (videoElement) {
-        videoElement.setAttribute('data-user-id', connectionUserId);
-      }
-    }
+  console.log('Received remote stream');
+  const remoteStream = event.streams[0];
+  let videoElement = document.querySelector(`.webcam[data-user-id="${connectionUserId}"]`);
+  if (!videoElement) {
+    videoElement = getAvailableWebcamSpot();
     if (videoElement) {
-      videoElement.srcObject = remoteStream;
+      videoElement.setAttribute('data-user-id', connectionUserId);
     }
-  };
+  }
+  if (videoElement) {
+    videoElement.srcObject = remoteStream;
+    
+    // Use the 'loadedmetadata' event to ensure the video is ready to play
+    videoElement.onloadedmetadata = () => {
+      console.log('Video metadata loaded, attempting to play');
+      videoElement.play().then(() => {
+        console.log('Video playback started successfully');
+      }).catch(error => {
+        console.error('Error playing video:', error);
+        // If autoplay fails, we could show a play button to the user
+        showPlayButton(videoElement);
+      });
+    };
+  }
+};
 
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
@@ -145,12 +158,11 @@ export async function startBroadcast() {
     localWebcamSpot.muted = true;
 
     Object.keys(peerConnections).forEach(connectionUserId => {
-      const peerConnection = peerConnections[connectionUserId];
-      localStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, localStream);
-      });
+      sendStreamToUser(connectionUserId);
     });
 
+    isBroadcasting = true;
+    console.log('Broadcasting started, isBroadcasting set to:', isBroadcasting);
     return true;
   } catch (error) {
     console.error('Error accessing media devices:', error);
@@ -168,7 +180,41 @@ export function stopBroadcast() {
   }
   const localWebcamSpot = document.querySelector('.webcam');
   localWebcamSpot.srcObject = null;
+  isBroadcasting = false;
+  console.log('Broadcasting stopped, isBroadcasting set to:', isBroadcasting);
 }
+
+export function sendStreamToNewUser(connectionUserId) {
+  console.log('Attempting to send stream to new user:', connectionUserId);
+  console.log('isBroadcasting:', isBroadcasting);
+  console.log('localStream:', localStream);
+  if (isBroadcasting && localStream) {
+    console.log('Conditions met, sending stream to user');
+    sendStreamToUser(connectionUserId);
+  } else {
+    console.log('Not broadcasting or no local stream available');
+  }
+}
+
+function sendStreamToUser(connectionUserId) {
+  console.log('sendStreamToUser called for:', connectionUserId);
+  const peerConnection = peerConnections[connectionUserId];
+  console.log('peerConnection:', peerConnection);
+  if (peerConnection && localStream) {
+    console.log('Checking and adding tracks to peer connection');
+    localStream.getTracks().forEach(track => {
+      if (!peerConnection.getSenders().find(sender => sender.track === track)) {
+        console.log('Adding track:', track.kind);
+        peerConnection.addTrack(track, localStream);
+      } else {
+        console.log('Track already exists:', track.kind);
+      }
+    });
+  } else {
+    console.log('Unable to add tracks: peerConnection or localStream is missing');
+  }
+}
+
 
 export function closePeerConnection(connectionUserId) {
   const peerConnection = peerConnections[connectionUserId];

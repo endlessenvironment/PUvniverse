@@ -1,6 +1,6 @@
 import { signIn, getDatabase } from './firebase.js';
 import { ref, push, onChildAdded, onChildRemoved, onDisconnect, set, remove, onValue, get } from "https://www.gstatic.com/firebasejs/9.1.1/firebase-database.js";
-import { initWebRTC, createConnection, handleOffer, handleAnswer, handleCandidate, resetWebcamSpot, startBroadcast, stopBroadcast, closePeerConnection } from './webrtc.js';
+import { initWebRTC, createConnection, handleOffer, handleAnswer, handleCandidate, resetWebcamSpot, startBroadcast, stopBroadcast, closePeerConnection, sendStreamToNewUser } from './webrtc.js';
 import { initializeNickname, setupNicknameListener, getNickname, setNickname, deleteNickname } from './usersettings.js';
 
 const database = getDatabase();
@@ -157,17 +157,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 
-  broadcastBtn.addEventListener('click', async () => {
-    if (broadcastBtn.textContent === 'Broadcast') {
-      const success = await startBroadcast();
-      if (success) {
-        broadcastBtn.textContent = 'Stop Broadcast';
-      }
+broadcastBtn.addEventListener('click', async () => {
+  if (broadcastBtn.textContent === 'Broadcast') {
+    console.log('Starting broadcast');
+    const success = await startBroadcast();
+    if (success) {
+      broadcastBtn.textContent = 'Stop Broadcast';
+      console.log('Broadcast started successfully');
     } else {
-      stopBroadcast();
-      broadcastBtn.textContent = 'Broadcast';
+      console.log('Failed to start broadcast');
     }
-  });
+  } else {
+    console.log('Stopping broadcast');
+    stopBroadcast();
+    broadcastBtn.textContent = 'Broadcast';
+    console.log('Broadcast stopped');
+  }
+});
 
   nicknameInput.addEventListener('change', async () => {
     const newNickname = nicknameInput.value.trim();
@@ -208,16 +214,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     onDisconnect(ref(database, `nicknames/${userId}`)).remove();
     set(userRef, userNickname);
   
-    onChildAdded(connectionsRef, async (snapshot) => {
-        const connectionUserId = snapshot.key;
-        const connectionNickname = snapshot.val();
-        console.log('New user connected:', connectionNickname);
-        if (connectionUserId !== userId) {
-            await createConnection(connectionUserId);
-            await addUserToList(connectionUserId, connectionNickname);
-            logUserActivity('logged in', connectionNickname);
-        }
-    });
+onChildAdded(connectionsRef, async (snapshot) => {
+    const connectionUserId = snapshot.key;
+    const connectionNickname = snapshot.val();
+    console.log('New user connected:', connectionNickname, 'with ID:', connectionUserId);
+    if (connectionUserId !== userId) {
+        await createConnection(connectionUserId);
+        await addUserToList(connectionUserId, connectionNickname);
+        logUserActivity('logged in', connectionNickname);
+        
+        // Send stream to new user if we're broadcasting
+        console.log('Calling sendStreamToNewUser');
+        sendStreamToNewUser(connectionUserId);
+    }
+});
 
     onChildRemoved(connectionsRef, async (snapshot) => {
         const connectionUserId = snapshot.key;

@@ -244,6 +244,29 @@ body.loading {
   border-top-right-radius: 10px;
   color: white;
 }
+.List-container {
+  display: flex;
+  flex-direction: column; /* Changed from flex-wrap: wrap to column */
+  gap: 10px;
+  padding: 10px;
+  max-height: 500px; /* Adjust as needed */
+  overflow-y: auto; /* Add scrollbar if content exceeds max-height */
+}
+
+/* Add new styles for .List-item */
+.List-item {
+  border: 2px solid #333; /* Add a border */
+  border-radius: 10px; /* Add rounded corners */
+  padding: 10px;
+  background-color: #333; /* Light background for contrast */
+  color: white;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.List-item:hover {
+  background-color: #e0e0e0; /* Slightly darker on hover */
+}
 .List-controls {
     display: flex;
     align-items: center;
@@ -268,13 +291,7 @@ body.loading {
 .hideList-button:hover {
   background-color: #cc0000;
 }
-.List-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-}
+
 .hidden {
   display: none;
 }
